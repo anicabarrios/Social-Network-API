@@ -6,7 +6,7 @@ module.exports = {
       const thoughts = await Thought.find();
       res.json(thoughts);
     } catch (err) {
-      console.error(err);  // Added error logging
+      console.error(err); 
       res.status(500).json(err);
     }
   },
@@ -21,7 +21,7 @@ module.exports = {
 
       res.json(thought);
     } catch (err) {
-      console.error(err);  // Added error logging
+      console.error(err); 
       res.status(500).json(err);
     }
   },
@@ -43,7 +43,7 @@ module.exports = {
 
       res.json('Created the thought 🎉');
     } catch (err) {
-      console.error(err);  // Added error logging
+      console.error(err); 
       res.status(500).json(err);
     }
   },
@@ -62,37 +62,38 @@ module.exports = {
 
       res.json(thought);
     } catch (err) {
-      console.error(err);  // Added error logging
+      console.error(err); 
       res.status(500).json(err);
     }
   },
 
   async deleteThought(req, res) {
     try {
-      const thought = await Thought.findOneAndRemove({ _id: req.params.thoughtId });  // Corrected parameter name
+        // Attempt to delete the thought by its ID
+        const result = await Thought.deleteOne({ _id: req.params.thoughtId });
 
-      if (!thought) {
-        return res.status(404).json({ message: 'No thought found with this id!' });
-      }
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: 'No thought found with this id!' });
+        }
 
-      const user = await User.findOneAndUpdate(
-        { _id: thought.userId },
-        { $pull: { thoughts: req.params.thoughtId } },
-        { new: true }
-      );
+        // Update the user's thoughts array
+        const user = await User.findOneAndUpdate(
+            { thoughts: req.params.thoughtId },
+            { $pull: { thoughts: req.params.thoughtId } },
+            { new: true }
+        );
 
-      if (!user) {
-        return res
-          .status(404)
-          .json({ message: 'User not found with this id!' });  // Corrected message
-      }
+        if (!user) {
+            return res.status(404).json({ message: 'User not found with this id!' });
+        }
 
-      res.json({ message: 'Thought successfully deleted!' });
+        res.json({ message: 'Thought successfully deleted!' });
     } catch (err) {
-      console.error(err);  // Added error logging
-      res.status(500).json(err);
+        console.error(err);
+        res.status(500).json(err);
     }
-  },
+}
+,
 
   async addThoughtReaction(req, res) {
     try {
@@ -108,17 +109,18 @@ module.exports = {
 
       res.json(thought);
     } catch (err) {
-      console.error(err);  // Added error logging
+      console.error(err); 
       res.status(500).json(err);
     }
   },
 
   async removeThoughtReaction(req, res) {
     try {
+      // Using findOneAndUpdate to update the document
       const thought = await Thought.findOneAndUpdate(
         { _id: req.params.thoughtId },
-        { $pull: { reactions: { reactionId: req.params.reactionId } } },
-        { runValidators: true, new: true }
+        { $pull: { reactions: { reactionId: req.params.reactionId } } }, // Using $pull to remove the reaction
+        { new: true } // Option to return the updated document
       );
 
       if (!thought) {
@@ -127,7 +129,7 @@ module.exports = {
 
       res.json(thought);
     } catch (err) {
-      console.error(err);  // Added error logging
+      console.error(err); 
       res.status(500).json(err);
     }
   },
