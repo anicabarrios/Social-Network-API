@@ -1,3 +1,4 @@
+const { Thought } = require('../models');
 const User = require('../models/User');
 
 module.exports = {
@@ -46,18 +47,29 @@ module.exports = {
 
   async deleteUser(req, res) {
     try {
-      const user = await User.findByIdAndDelete(req.params.userId);
-      if (!user) {
-        return res.status(404).json({ message: 'No user with that ID' });
-      }
-      // Optionally remove user's associated thoughts (assuming thoughts are stored in another model)
-      await Thought.deleteMany({ userId: req.params.userId });
+          const userId = req.params.userId;
 
-      res.json({ message: 'User and associated thoughts deleted' });
+          const userResult = await User.deleteOne({ _id: userId });
+
+        if (userResult.deletedCount === 0) {
+            return res.status(404).json({ message: 'No user found with this id!' });
+        }
+
+        const thoughtUpdateResult = await Thought.updateMany(
+            { userId: userId },
+            { $pull: { thoughts: userId } }
+        );
+
+            if (thoughtUpdateResult.matchedCount === 0) {
+            return res.status(404).json({ message: 'No related thoughts found for this user!' });
+        }
+        res.json({ message: 'User successfully deleted!' });
     } catch (err) {
-      res.status(500).json(err);
+        console.error('Error deleting user:', err);
+        res.status(500).json({ error: 'Internal server error' });
     }
-  },
+},
+
 
   async addFriend(req, res) {
     try {
